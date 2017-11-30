@@ -1,0 +1,17 @@
+https://pyinstaller.readthedocs.io/en/stable/
+
+Extract tar:
+	PyInstaller-3.2.tar.gz
+	pypa-setuptools.zip
+
+Put pypa-setuptools in the python path: 
+	just use -> IncludeInPath.sh <path>
+	
+Creating exe:
+	pyinstaller.py python_script
+
+Get single executable:	
+./../PyInstaller-3.2/pyinstaller.py --onefile hash.py 
+
+Put it in linux path:
+	PATH=$PATH:<your binary's path>
