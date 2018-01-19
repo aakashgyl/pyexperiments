@@ -1,0 +1,53 @@
+#!/usr/bin/python
+
+import sys
+import getopt
+import base64
+
+from Crypto.PublicKey import RSA
+
+BS = 16
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
+unpad = lambda s : s[:-ord(s[len(s)-1:])]
+
+def decryptPass(encrypted_passwd):
+    f = open("/c/users/aakash/prdata",'r')
+    val = f.read()
+    f.close()
+    
+    #import private key, decode and make into tuple, decrypt and unpad
+    keypair_pvt = RSA.importKey(base64.b64decode(val))
+    decrypt_passwd_tuple = ((base64.b64decode(encrypted_passwd),))
+    decrypted_passwd   = unpad(keypair_pvt.decrypt(decrypt_passwd_tuple))
+    print decrypted_passwd
+
+    
+def error_msg(val):
+    print "\nDont hack!!!\n"
+    sys.exit(2)
+
+def validateCliInput():
+    version = "decryptPassword.py 1.0"
+    if len(sys.argv) in [2,3] :
+        try:
+            opts, _ = getopt.getopt(sys.argv[1:],"hp:",["help"])
+        except getopt.GetoptError:
+            error_msg(sys.argv)
+        
+        for opt, arg in opts:
+            if len(sys.argv) == 2:
+                if opt in ("-h","--help"):
+                    sys.exit(0)
+                elif opt in ('-v') :
+                    print "\nVersion : %s\n" %(version)
+                    sys.exit(0)
+            elif len(sys.argv) == 3:
+                if opt in ('-p'):
+                    decryptPass(arg)
+            else:
+                error_msg(sys.argv)
+    else:
+        error_msg(sys.argv)
+
+if __name__ == '__main__':
+    validateCliInput()
