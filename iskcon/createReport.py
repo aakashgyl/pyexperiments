@@ -88,19 +88,25 @@ def processSadhnaFromComments(sadhna, name, timeval):
         sadhnadict[ROUNDS] = '16'
         sadhnadict[CHANTINGFINISHTIME] = timeval
     
-    if "rounds" in sadhna or "round" in sadhna:
+    sadhnaOrig = sadhna
+    sadhna = sadhna.replace(" ","").replace(".","")
+    
+    if ("rounds" in sadhna.lower() or "round" in sadhna.lower()):
         rounds = re.findall(r'\d+', sadhna)
-        if len(rounds) == 1:
+        if len(rounds) == 1 and "yesterday" not in sadhna.lower():
             if rounds[0] != "16":
                 sadhnadict[ROUNDS] = rounds[0] + " done and pending " + str(16-int(rounds[0]))
             else:
                 sadhnadict[ROUNDS] = rounds[0]
             sadhnadict[CHANTINGFINISHTIME] = timeval
+        elif "16" in rounds and "yesterday" not in sadhna.lower():
+            sadhnadict[ROUNDS] = "16"
+            sadhnadict[CHANTINGFINISHTIME] = timeval
         else:
-            print "Check this prabhu ", sadhna, rounds
+            print "Check this prabhu -> ", name, ": ", sadhnaOrig.strip(), rounds
     
-    if READING in sadhna.lower():
-        sadhnadict[READING] = re.sub(r'[^\x00-\x7F]+','', sadhna)
+    if READING in sadhnaOrig.lower() or "read" in sadhnaOrig.lower():
+        sadhnadict[READING] = re.sub(r'[^\x00-\x7F]+','', sadhnaOrig)   #remove non ascii code
         
     return sadhnadict
 
@@ -128,10 +134,14 @@ def saveToFile():
         fp.write(json.dumps(report))
         print "See it as yaml at https://www.json2yaml.com/"
     elif writeType == "csv":
+        i = 0
         fp = open('SadhnaReport.csv', 'w')    
         fp.write("Date, Rounds, EndTime, Reading\n")
         for name in report.keys():
-            fp.write("\n" + name + "\n")
+            if name == "Akshay Gaursundar Das" or name == "Radhapati Gopinath Prabhu":
+                continue
+            i = i+1
+            fp.write("\n" + str(i) + ". " + name + "\n")
             dateList = generateListOfDates(startDate)
 
             for date in dateList:
@@ -164,11 +174,21 @@ def generateListOfDates(startDate):
         
     return dateList
 
+def insertExceptions():
+    updateReport("Sunayana mataji", "20/02/19", {READING: "Verse  2.46 to 2.55 done"})
+    updateReport("Jitu pr", "20/02/19", {READING: "Hare Krishna....4.10 to 4.31"})
+    updateReport("Gauranga pr", "24/02/19", {ROUNDS: "16", CHANTINGFINISHTIME: "06:00 pm"})
+    updateReport("Bhadra Nitai pr", "24/02/19", {ROUNDS: "16", CHANTINGFINISHTIME: "06:00 pm"})
+    updateReport("Mitesh pr", "23/02/19", {ROUNDS: "16", CHANTINGFINISHTIME: "late night"})
+    updateReport("Mitesh pr", "25/02/19", {ROUNDS: "10", CHANTINGFINISHTIME: "01:04 pm"})
+    updateReport("Soniya mataji", "24/02/19", {ROUNDS: "16", CHANTINGFINISHTIME: "10:56 pm"})
+
 if __name__ == '__main__':
     processInputFile()
     with codecs.open(PROCESSEDFILE) as f:
         input = f.read()
         for val in input.split("\n"):
             analyzeWhatsappComment(val)
+    insertExceptions()
     print report
     saveToFile()
